@@ -4,8 +4,53 @@
   <title>Flask-SocketIO Test</title>
    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
+   <script src="static/libs/gauge.min.js"></script>
    <script type="text/javascript" charset="utf-8">
      $(document).ready(function() {
+       
+         var gauge = new RadialGauge({
+          renderTo: 'canvasID',
+          width: 300,
+          height: 300,
+          units: "V",
+          minValue: 0,
+          maxValue: 5,
+          majorTicks: [
+              "0",
+              "0.5",
+              "1",
+              "1.5",
+              "2", 
+              "2.5",
+              "3",
+              "3.5",
+              "4",
+              "4.5",
+              "5"
+          ],
+          minorTicks: 2,
+          strokeTicks: true,
+          highlights: [
+              {
+                  "from": 4.5,
+                  "to": 5,
+                  "color": "rgba(200, 50, 50, .75)"
+              }
+          ],
+          colorPlate: "#fff",
+          borderShadowWidth: 0,
+          borders: false,
+          needleType: "arrow",
+          needleWidth: 2,
+          needleCircleSize: 7,
+          needleCircleOuter: true,
+          needleCircleInner: false,
+          animationDuration: 1500,
+          animationRule: "linear"
+      });
+      gauge.draw();
+      gauge.value = "0";
+      
       namespace = '/test';
       var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
@@ -13,39 +58,80 @@
         socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
 
       socket.on('my_response', function(msg) {
-        console.log(msg.data);
-        $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html(); });
+       console.log(msg.data);
+        $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();});
 
       $('form#emit').submit(function(event) {
           socket.emit('my_event', {value: $('#emit_value').val()});
           return false; });
       $('#buttonVal').click(function(event) {
-          //console.log($('#buttonVal').val());
+          
           socket.emit('click_event', {value: $('#buttonVal').val()});
           return false; });
-      $('#sliderVal').change(function(event) {
-          console.log($('#sliderVal').val());
-          premenna =5; //$('#sliderVal').val();
-          socket.emit('slider_event', {value: $('#sliderVal').val()});
-          return false; });
+      
       $('form#disconnect').submit(function(event) {
           socket.emit('disconnect_request');
-          return false; });         
+          return false; });
+          
+          
+          $('form#Open').submit(function(event) {
+          socket.emit('open_request');  
+          return false; }); 
+          
+          $('form#Stop').submit(function(event) {
+          socket.emit('Stop_request');
+          return false; }); 
+          
+          $('form#Start').submit(function(event) {
+          socket.emit('Start_request');
+          return false; }); 
+          
+          $('form#Vypis1').submit(function(event) {
+          socket.emit('Vypis1_request');
+          return false; }); 
+          
+          $('form#Vypis2').submit(function(event) {
+          socket.emit('Vypis2_request');
+          return false; }); 
+          
+          $('form#regulator').submit(function(event) {
+          gauge.value = ($('#Napatie').val());
+          socket.emit('my_event1', {value: $('#P').val() + $('#I').val() +  $('#D').val()+ (parseInt($('#Napatie').val()/5*1023)) + "x"});                   
+          return false; 
+        });
+     
       });
     </script>
  </head>
  <body>
-  <h1>Flask-SocketIO Test</h1>
-  <h2>Send:</h2>
-  <form id="emit" method="POST" action='#'>
-    <input type="text" name="emit_value" id="emit_value" placeholder="Amplituda">
-    <input type="submit" value="Send">
-  </form>
-  <button id="buttonVal" type="submit" value="send">Send value</button>
-  <input type="range" id="sliderVal" name="vstup2" min="0" max="10" step="2" value="8">
+  <h1>Poit zadanie</h1>
   <form id="disconnect" method="POST" action="#">
     <input type="submit" value="Disconnect">
   </form> 
+    <form id="Start" method="POST" action="#">
+    <input type="submit" value="Start">
+  </form> 
+    <form id="Stop" method="POST" action="#">
+    <input type="submit" value="Stop">
+  </form> 
+  </form> 
+    <form id="Open" method="POST" action="#Open">
+    <input type="submit" value="Open" >
+  </form> 
+    <form id="Vypis1" method="POST" action="#Open">
+    <input type="submit" value="Vypis DB" >
+  </form> 
+  <form id="Vypis2" method="POST" action="#Open">
+    <input type="submit" value="Vypis subor" >
+  </form> 
+  <form id="regulator" method="POST" action='#'>
+        <input type="text" name="P" id="P" placeholder="P" required><br>
+        <input type="text" name="I" id="I" placeholder="I" required><br>
+        <input type="text" name="D" id="D" placeholder="D" required><br>
+        <input type="text" name="Napatie" id="Napatie" placeholder="Napatie (0-5V)" required><br>
+        <input type="submit" value="Posli">
+      </form>
+  <canvas id="canvasID"></canvas>
   <h2>Receive:</h2>
   <div id="log"></div>
  </body>
